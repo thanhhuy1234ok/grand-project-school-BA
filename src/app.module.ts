@@ -43,6 +43,9 @@ import { DatabasesModule } from './databases/databases.module';
         synchronize: true,
         autoLoadModels: true,
         autoLoadEntities: true,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
       inject: [ConfigService],
     }),
