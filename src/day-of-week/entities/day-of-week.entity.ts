@@ -1,11 +1,11 @@
 import { Schedule } from 'src/schedule/entities/schedule.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class DayOfWeek {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: number;
-
+  
   @Column()
   name: string; // Tên ngày trong tuần (VD: Thứ Hai)
 

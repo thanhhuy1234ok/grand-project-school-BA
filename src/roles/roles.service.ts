@@ -54,11 +54,15 @@ export class RolesService {
     const defaultLimit = limit ? limit : 10;
 
     const whereCondition = [];
-    if (filter.name) {
-      whereCondition.push({ name: ILike(`%${filter.name}%`) });
-    }
+if (
+  filter.name &&
+  typeof filter.name === 'string' &&
+  filter.name.trim() !== ''
+) {
+  whereCondition.push({ name: ILike(`%${filter.name.trim()}%`) });
+}
 
-    const where = whereCondition.length ? whereCondition : filter;
+   const where = whereCondition.length > 0 ? whereCondition : {};
 
     let order = {};
     if (sort) {
@@ -66,9 +70,9 @@ export class RolesService {
       order = { [sortBy]: sortOrder === 1 ? 'ASC' : 'DESC' };
     }
 
-    const totalItems = await this.roleRepository.count({
-      where: filter,
-    });
+  const totalItems = await this.roleRepository.count({
+    where,
+  });
 
     const totalPages = Math.ceil(totalItems / defaultLimit);
     const result = await this.roleRepository.find({

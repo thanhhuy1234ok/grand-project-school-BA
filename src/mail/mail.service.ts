@@ -16,7 +16,7 @@ export class MailService {
         'Không tìm thấy email của người dùng. Không thể gửi email.',
       );
     }
-    const approvalLink = `http://localhost:8080/api/v1/update-info-user/approve-update/${req.id}`;
+    const approvalLink = `http://localhost:3000/admin/test/${req.id}`;
     const emailBody = `
       <p>Sinh viên ${user.name} đã yêu cầu cập nhật thông tin.</p>
       <p>Thông tin: ${JSON.stringify(req.data)}</p>

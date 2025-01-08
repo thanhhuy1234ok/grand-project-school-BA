@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { UpdateInfoUser } from './entities/update_info_user.entity';
 import { User } from 'src/users/entities/user.entity';
 import { MailService } from 'src/mail/mail.service';
+import { ADMINROLE } from 'src/helpers/types/constans';
 
 @Injectable()
 export class UpdateInfoUserService {
@@ -36,6 +37,15 @@ export class UpdateInfoUserService {
     });
     const dataReq = await this.updateRequestRepo.save(updateRequest);
     return await this.mailService.sendUpdateRequestNotification(user, dataReq);
+  }
+
+  async getUpdateRequestById(id: string, user: IUser) 
+  {
+    const checkUser = await this.usersRepository.findOne({ where: { id: user.id } });
+    if (checkUser.role.name != ADMINROLE) {
+      throw new BadRequestException('User không có quyền truy cập');
+    }
+    return await this.updateRequestRepo.findOne({ where: { id }, relations:["user"] });
   }
 
   async approveUpdateRequest(requestId: string) {

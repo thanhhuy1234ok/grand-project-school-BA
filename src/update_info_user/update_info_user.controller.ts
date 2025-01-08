@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   Delete,
+  NotFoundException,
 } from '@nestjs/common';
 import { UpdateInfoUserService } from './update_info_user.service';
 import { CreateUpdateInfoUserDto } from './dto/create-update_info_user.dto';
@@ -29,7 +30,19 @@ export class UpdateInfoUserController {
     return this.updateInfoUserService.create(createUpdateInfoUserDto, user);
   }
 
-  @Get('approve-update/:id')
+  @Get('approve-user/:id')
+  async getUpdateRequestDetail(@Param('id') id: string, @User() user: IUser) {
+    const updateRequest = await this.updateInfoUserService.getUpdateRequestById(
+      id,
+      user,
+    );
+    if (!updateRequest) {
+      throw new NotFoundException('Không tìm thấy yêu cầu cập nhật thông tin');
+    }
+    return updateRequest;
+  }
+
+  @Post('approve-update/:id')
   async approveUpdate(@Param('id') requestId: string) {
     await this.updateInfoUserService.approveUpdateRequest(requestId);
     return { message: 'Yêu cầu đã được phê duyệt thành công!' };
