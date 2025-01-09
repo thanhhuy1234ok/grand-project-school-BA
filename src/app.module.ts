@@ -43,10 +43,12 @@ import { DatabasesModule } from './databases/databases.module';
         synchronize: true,
         autoLoadModels: true,
         autoLoadEntities: true,
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      }),
+        ssl: configService.get('DB_SSL') === 'true' 
+          ? { 
+              rejectUnauthorized: true // Hoặc true nếu muốn xác thực chứng chỉ
+            } 
+          : false,
+              }),
       inject: [ConfigService],
     }),
 
