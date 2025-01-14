@@ -28,7 +28,7 @@ import { DatabasesModule } from './databases/databases.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10,
+        limit: 20,
       },
     ]),
     TypeOrmModule.forRootAsync({
