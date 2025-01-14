@@ -16,7 +16,7 @@ export class MailService {
         'Không tìm thấy email của người dùng. Không thể gửi email.',
       );
     }
-    const approvalLink = `http://localhost:3000/admin/test/${req.id}`;
+    const approvalLink = `https://schoo-academy.io.vn/admin/test/${req.id}`;
     const emailBody = `
       <p>Sinh viên ${user.name} đã yêu cầu cập nhật thông tin.</p>
       <p>Thông tin: ${JSON.stringify(req.data)}</p>
@@ -63,7 +63,7 @@ export class MailService {
     return await this.mailerService.sendMail({
       to: 'nguyenvothanhhuy2002@gmail.com',
       from: '"Support Team" <support@example.com>', // override default from
-      subject: 'Welcome to Nice App! Confirm your Email',
+      subject: 'Thay đổi mật khẩu',
       template: 'retrypass',
       context: {
         name: data.name,

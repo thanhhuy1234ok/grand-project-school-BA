@@ -1,17 +1,33 @@
 # version: '3.8'
 #MongoDB 5.0+ requires a CPU with AVX support, => sử dụng image: mongo:4.4
 services:
-  be-nest:
+  postgresdb:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: my-postgres-grand-project
+    #volumes:
+    #   - ./initDB.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=school_manager
+    ports:
+      - "5432:5432"
+
+  backend:
+    depends_on:
+      - postgresdb
+    restart: unless-stopped
+    container_name: my-backend
     build:
       context: .
-      dockerfile: Dockerfile
-    # restart: unless-stopped
-    expose:
-      - 8080
-    ports:
-      - 8080:8080
-    env_file:
+    environment:
+      - DB_HOST=postgresdb
       - .env
+    links:
+      - postgresdb
+    ports:
+      - "8080:8080"
 
 
     # docker compose -p hoidanit-nest up -d
