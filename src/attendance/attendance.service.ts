@@ -193,7 +193,10 @@ export class AttendanceService {
           (attendedSessions / totalSessions) * maxAttendancePoints;
 
         const score = await this.scoreRepository.findOne({
-          where: { student: { id: studentId } },
+          where: {
+            student: { id: studentId },
+            semester: { schedules: { id: attendance.schedule.id } },
+          },
         });
 
         if (score) {
@@ -424,7 +427,7 @@ export class AttendanceService {
           (attendedSessions / totalSessions) * maxAttendancePoints;
 
         const score = await this.scoreRepository.findOne({
-          where: { student: { id: user.id } },
+          where: { student: { id: user.id }, semester:{schedules:{id: attendance.schedule.id}} },
         });
 
         if (score) {
