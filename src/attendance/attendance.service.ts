@@ -377,18 +377,18 @@ export class AttendanceService {
       throw new BadRequestException('Attendance đã được điểm danh trước đó.');
     }
 
-    const now = dayjs(); // Thời gian hiện tại
-    const currentTime = dayjs(now.format('HH:mm:ss'), 'HH:mm:ss');
-    const startTime = formatToHHMMSS(attendance.schedule.startTime);
-    const endTime = formatToHHMMSS(attendance.schedule.endTime);
+    // const now = dayjs(); // Thời gian hiện tại
+    // const currentTime = dayjs(now.format('HH:mm:ss'), 'HH:mm:ss');
+    // const startTime = formatToHHMMSS(attendance.schedule.startTime);
+    // const endTime = formatToHHMMSS(attendance.schedule.endTime);
 
-    if (currentTime.isBefore(startTime) || currentTime.isAfter(endTime)) {
-      const errorMessage = currentTime.isBefore(startTime)
-        ? 'Chưa đến giờ điểm danh.'
-        : 'Đã quá giờ điểm danh.';
-      console.log(errorMessage);
-      throw new BadRequestException(errorMessage);
-    }
+    // if (currentTime.isBefore(startTime) || currentTime.isAfter(endTime)) {
+    //   const errorMessage = currentTime.isBefore(startTime)
+    //     ? 'Chưa đến giờ điểm danh.'
+    //     : 'Đã quá giờ điểm danh.';
+    //   console.log(errorMessage);
+    //   throw new BadRequestException(errorMessage);
+    // }
 
     attendance.isPresent = true;
 
