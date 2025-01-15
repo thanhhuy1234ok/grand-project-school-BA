@@ -359,7 +359,20 @@ export class AttendanceService {
 
   async scanQRAttendanceStudent(qrData: string, user: IUser) {
     const { scheduleId, date } = JSON.parse(qrData);
-    console.log(scheduleId, date);
+    // Tính tổng số buổi học duy nhất
+    const totalSessionsResult = await this.attendanceRepository
+      .createQueryBuilder('attendance')
+      .select('COUNT(DISTINCT attendance.date)', 'count')
+      .where('attendance.scheduleId = :scheduleId', { scheduleId })
+      .getRawOne();
+
+    const totalSessions = parseInt(totalSessionsResult.count, 10);
+
+    if (totalSessions <= 0) {
+      throw new BadRequestException(
+        `No sessions found for Schedule ID ${scheduleId}`,
+      );
+    }
     const attendance = await this.attendanceRepository.findOne({
       where: {
         date: date,
@@ -393,6 +406,35 @@ export class AttendanceService {
     attendance.isPresent = true;
 
     await this.attendanceRepository.save(attendance);
+
+    // Tính số buổi đã tham gia
+        const attendedSessionsResult = await this.attendanceRepository
+          .createQueryBuilder('attendance')
+          .select('COUNT(attendance.id)', 'count')
+          .where('attendance.studentId = :studentId', { studentId: user.id })
+          .andWhere('attendance.scheduleId = :scheduleId', { scheduleId })
+          .andWhere('attendance.isPresent = :isPresent', { isPresent: true })
+          .getRawOne();
+
+        const attendedSessions = parseInt(attendedSessionsResult.count, 10);
+
+        // Cập nhật điểm chuyên cần
+        const maxAttendancePoints = 10;
+        const attendanceScore =
+          (attendedSessions / totalSessions) * maxAttendancePoints;
+
+        const score = await this.scoreRepository.findOne({
+          where: { student: { id: user.id } },
+        });
+
+        if (score) {
+          score.attendanceScore = Number(attendanceScore.toFixed(2));
+          await this.scoreRepository.save(score);
+        } else {
+          throw new BadRequestException(
+            `Score record not found for Student ID ${user.id}`,
+          );
+        }
 
     return { message: 'Điểm danh thành công.' };
   }
