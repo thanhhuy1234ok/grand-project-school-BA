@@ -1,29 +1,92 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { ILike, Repository } from 'typeorm';
 import aqp from 'api-query-params';
 import { Room } from './entities/room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Building } from 'src/modules_v2/building/entities/building.entity';
+import { Floor } from 'src/modules_v2/floor/entities/floor.entity';
 
 @Injectable()
 export class RoomService {
   constructor(
     @InjectRepository(Room)
     private readonly roomRepository: Repository<Room>,
+
+    @InjectRepository(Building)
+    private readonly buildingRepository: Repository<Building>,
+
+    @InjectRepository(Floor)
+    private readonly floorRepository: Repository<Floor>,
   ) {}
 
+  // async create(createRoomDto: CreateRoomDto): Promise<Room> {
+  //   const checkName = await this.roomRepository.findOne({
+  //     where: { name: createRoomDto.name },
+  //   });
+
+  //   if (checkName) {
+  //     throw new BadRequestException('Room name already exists');
+  //   }
+
+  //   const room = this.roomRepository.create(createRoomDto);
+  //   return await this.roomRepository.save(room);
+  // }
+
   async create(createRoomDto: CreateRoomDto): Promise<Room> {
-    const checkName = await this.roomRepository.findOne({
-      where: { name: createRoomDto.name },
-    });
+      const { name, buildingID, floorID, capacity, status } = createRoomDto;
 
-    if (checkName) {
-      throw new BadRequestException('Room name already exists');
-    }
+      // Kiểm tra phòng có bị trùng tên không
+      const existingRoom = await this.roomRepository.findOne({
+        where: { name: name.trim() },
+      });
 
-    const room = this.roomRepository.create(createRoomDto);
-    return await this.roomRepository.save(room);
+      if (existingRoom) {
+        throw new ConflictException(`Room with name "${name}" already exists.`);
+      }
+
+      // Kiểm tra xem tòa nhà có tồn tại không
+      const building = await this.buildingRepository.findOne({
+        where: { id: buildingID },
+      });
+      if (!building) {
+        throw new NotFoundException(
+          `Building with ID ${buildingID} not found.`,
+        );
+      }
+
+      let floor: Floor | null = null;
+
+      // Nếu tòa nhà có tầng, bắt buộc phải có floorID
+      if (building.hasFloors) {
+        if (floorID === undefined || floorID === null) {
+          throw new BadRequestException(
+            `Floor ID is required for buildings with floors.`,
+          );
+        }
+
+        if (isNaN(floorID)) {
+          throw new BadRequestException(`Floor ID must be a valid number.`);
+        }
+
+        // Kiểm tra xem tầng có tồn tại không
+        floor = await this.floorRepository.findOne({ where: { id: floorID } });
+        if (!floor) {
+          throw new NotFoundException(`Floor with ID ${floorID} not found.`);
+        }
+      }
+
+      // Tạo phòng mới
+      const room = this.roomRepository.create({
+        name: name.trim(),
+        building,
+        floor,
+        capacity,
+        status,
+      });
+
+      return await this.roomRepository.save(room);
   }
 
   async findAll(currentPage: number, limit: number, qs: string): Promise<any> {

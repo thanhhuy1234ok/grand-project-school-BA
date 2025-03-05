@@ -21,6 +21,9 @@ import { MailModule } from './mail/mail.module';
 import { UpdateInfoUserModule } from './update_info_user/update_info_user.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabasesModule } from './databases/databases.module';
+import { BuildingModule } from './modules_v2/building/building.module';
+import { CampusModule } from './modules_v2/campus/campus.module';
+import { FloorModule } from './modules_v2/floor/floor.module';
 
 @Module({
   imports: [
@@ -71,6 +74,9 @@ import { DatabasesModule } from './databases/databases.module';
     MailModule,
     UpdateInfoUserModule,
     DatabasesModule,
+    BuildingModule,
+    CampusModule,
+    FloorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
