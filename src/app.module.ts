@@ -25,6 +25,9 @@ import { BuildingModule } from './modules_v2/building/building.module';
 import { CampusModule } from './modules_v2/campus/campus.module';
 import { FloorModule } from './modules_v2/floor/floor.module';
 import { FileModule } from './file/file.module';
+import { FacilityCategoryModule } from './modules_v2/csvc/facility-category/facility-category.module';
+import { FacilityStatusModule } from './modules_v2/csvc/facility-status/facility-status.module';
+import { SupplierModule } from './modules_v2/csvc/supplier/supplier.module';
 
 @Module({
   imports: [
@@ -79,6 +82,9 @@ import { FileModule } from './file/file.module';
     CampusModule,
     FloorModule,
     FileModule,
+    FacilityCategoryModule,
+    FacilityStatusModule,
+    SupplierModule,
   ],
   controllers: [AppController],
   providers: [AppService],
