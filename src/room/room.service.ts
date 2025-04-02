@@ -55,7 +55,7 @@ export class RoomService {
           `Building with ID ${buildingID} not found.`,
         );
       }
-
+      console.log(floorID);
       let floor: Floor | null = null;
 
       // Nếu tòa nhà có tầng, bắt buộc phải có floorID

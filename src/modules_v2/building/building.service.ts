@@ -6,6 +6,7 @@ import { Building } from './entities/building.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Campus } from '../campus/entities/campus.entity';
 import aqp from 'api-query-params';
+import { Floor } from '../floor/entities/floor.entity';
 
 @Injectable()
 export class BuildingService {
@@ -15,6 +16,9 @@ export class BuildingService {
 
     @InjectRepository(Campus)
     private campusRepository: Repository<Campus>,
+
+    @InjectRepository(Floor)
+    private floorRepository: Repository<Floor>,
   ) {}
   async create(createBuildingDto: CreateBuildingDto) {
     const checkCampusId = await this.campusRepository.findOne({
@@ -23,6 +27,14 @@ export class BuildingService {
 
     if (!checkCampusId) {
       throw new BadRequestException('Campus not found');
+    }
+
+    // Kiểm tra tên tòa nhà đã tồn tại chưa
+    const checkName = await this.buildingRepository.findOne({
+      where: { name: ILike(`%${createBuildingDto.name}%`) },
+    });
+    if (checkName) {
+      throw new BadRequestException('Building name already exists');
     }
 
     // Kiểm tra nếu hasFloors = true nhưng totalFloors không hợp lệ
@@ -47,49 +59,75 @@ export class BuildingService {
       totalFloors: createBuildingDto.totalFloors,
       campus: checkCampusId,
     });
+    const savedBuilding = await this.buildingRepository.save(building);
 
-    return this.buildingRepository.save(building);
+    if (createBuildingDto.hasFloors) {
+      const floorEntities = [];
+      for (let i = 1; i <= createBuildingDto.totalFloors; i++) {
+        floorEntities.push(
+          this.floorRepository.create({
+            floorNumber: i,
+            building: savedBuilding,
+            name: `Tầng ${i}`,
+          }),
+        );
+      }
+
+      await this.floorRepository.save(floorEntities);
+    }
+
+    return savedBuilding;
   }
 
   async findAll(currentPage: number, limit: number, qs: string) {
     const { filter, sort } = aqp(qs);
+
+    // Xoá các field không liên quan
     delete filter.current;
     delete filter.pageSize;
 
-    const offset = (currentPage - 1) * limit;
-    const defaultLimit = limit || 10;
+    const page = currentPage || 1;
+    const pageSize = limit || 10;
+    const offset = (page - 1) * pageSize;
 
-    const whereCondition = [];
-    if (filter.name) {
-      whereCondition.push({ name: ILike(`%${filter.name}%`) });
+    // Xây dựng điều kiện where
+    const where: any = {};
+
+    // Nếu có campusID thì lọc, còn không thì bỏ qua
+    if (filter.campusID) {
+     where.campus = { id: filter.campusID };
     }
 
-    const where = whereCondition.length ? whereCondition : filter;
+    // Thêm các filter khác nếu có (ngoại trừ campusID đã xử lý riêng)
+    const otherFilters = { ...filter };
+    delete otherFilters.campusID;
+    Object.assign(where, otherFilters);
 
+    // Xử lý sort
     let order = {};
-    if (sort) {
+    if (sort && Object.keys(sort).length > 0) {
       const [sortBy, sortOrder] = Object.entries(sort)[0];
-      order = { [sortBy]: sortOrder === 1 ? 'ASC' : 'DESC' };
+      order = {
+        [sortBy]: sortOrder === 1 ? 'ASC' : 'DESC',
+      };
     }
 
-    const totalItems = await this.buildingRepository.count({
-      where,
-    });
+    // Tổng số bản ghi
+    const totalItems = await this.buildingRepository.count({ where });
+    const totalPages = Math.ceil(totalItems / pageSize);
 
-    const totalPages = Math.ceil(totalItems / defaultLimit);
-
+    // Lấy dữ liệu
     const result = await this.buildingRepository.find({
       where,
       skip: offset,
-      take: defaultLimit,
+      take: pageSize,
       order,
     });
 
-    // Trả về kết quả và thông tin phân trang
     return {
       meta: {
-        current: currentPage,
-        pageSize: limit,
+        current: page,
+        pageSize,
         pages: totalPages,
         total: totalItems,
       },

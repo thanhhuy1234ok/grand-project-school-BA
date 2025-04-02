@@ -24,6 +24,7 @@ import { DatabasesModule } from './databases/databases.module';
 import { BuildingModule } from './modules_v2/building/building.module';
 import { CampusModule } from './modules_v2/campus/campus.module';
 import { FloorModule } from './modules_v2/floor/floor.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { FloorModule } from './modules_v2/floor/floor.module';
     BuildingModule,
     CampusModule,
     FloorModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

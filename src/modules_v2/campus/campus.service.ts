@@ -13,12 +13,16 @@ export class CampusService {
     private readonly campusRepository: Repository<Campus>,
   ) {}
 
-  create(createCampusDto: CreateCampusDto) {
-    const checkLocation = this.campusRepository.findOne({
-      where: { location: createCampusDto.location },
+  async create(createCampusDto: CreateCampusDto) {
+    const checkLocation = await this.campusRepository.findOne({
+      where: [
+        { location: createCampusDto.location },
+        { name: createCampusDto.name },
+      ],
     });
+
     if (checkLocation) {
-      throw new BadRequestException('Location already exists');
+      throw new BadRequestException('Campus name or location already exists');
     }
 
     return this.campusRepository.save(createCampusDto);
@@ -80,5 +84,92 @@ export class CampusService {
 
   remove(id: number) {
     return `This action removes a #${id} campus`;
+  }
+
+  async getCampusSummary(campusId?: number): Promise<any> {
+    const query = this.campusRepository
+      .createQueryBuilder('campus')
+      .leftJoin('campus.buildings', 'building')
+      .leftJoin('building.floors', 'floor')
+      .leftJoin('floor.rooms', 'room')
+      .select([
+        'campus.id AS "campusId"',
+        'campus.name AS "campusName"',
+        'COUNT(DISTINCT building.id) AS "totalBuildings"',
+        'COUNT(DISTINCT floor.id) AS "totalFloors"',
+        'COUNT(DISTINCT room.id) AS "totalRooms"',
+        // 'COALESCE(SUM(room.capacity), 0) AS "totalSeats"',
+      ])
+      .groupBy('campus.id, campus.name')
+      .orderBy('campus.id');
+
+    if (campusId) {
+      query.where('campus.id = :campusId', { campusId });
+      return query.getRawOne();
+    }
+
+    return query.getRawMany();
+  }
+
+  async getCampusTotalSummary(): Promise<any> {
+    return this.campusRepository
+      .createQueryBuilder('campus')
+      .leftJoin('campus.buildings', 'building')
+      .leftJoin('building.floors', 'floor')
+      .leftJoin('floor.rooms', 'room')
+      .select([
+        'COUNT(DISTINCT campus.id) AS "totalCampuses"',
+        'COUNT(DISTINCT building.id) AS "totalBuildings"',
+        'COUNT(DISTINCT room.id) AS "totalRooms"',
+      ])
+      .getRawOne();
+  }
+
+  async getDetailCampusById(id: number): Promise<Campus> {
+    const campus = await this.campusRepository
+      .createQueryBuilder('campus')
+      .leftJoinAndSelect('campus.buildings', 'building')
+      .leftJoinAndSelect('building.floors', 'floor')
+      .leftJoinAndSelect('floor.rooms', 'floorRoom')
+      .leftJoinAndSelect('building.rooms', 'buildingRoom')
+      .where('campus.id = :id', { id })
+      .getOne();
+
+    if (!campus) {
+      throw new BadRequestException('Campus not found');
+    }
+
+    // return campus;
+    return this.formatCampus(campus);
+  }
+
+  private formatCampus(campus: Campus): any {
+    return {
+      name: campus.name,
+      buildings: campus.buildings.map((building) => {
+        const hasFloors = building.floors && building.floors.length > 0;
+
+        const floors = hasFloors
+          ? building.floors.map((floor) => ({
+              floor: floor.floorNumber,
+              rooms: floor.rooms?.map((room) => room.name) || [],
+            }))
+          : [];
+
+        const directRooms = building.rooms?.map((room) => room.name) || [];
+
+        const result: any = {
+          name: building.name,
+          floors: floors,
+        };
+
+        // 👉 Chỉ thêm roomsWithoutFloor nếu building không có tầng
+        if (!hasFloors && directRooms.length > 0) {
+          result.roomsWithoutFloor = directRooms;
+        }
+
+        return result;
+      }),
+    };
   }
 }
