@@ -55,25 +55,33 @@ export class FloorService {
     const offset = (currentPage - 1) * limit;
     const defaultLimit = limit || 10;
 
-    const whereCondition = [];
+    const whereCondition: any[] = [];
+
+    // Tìm theo tên nếu có
     if (filter.name) {
       whereCondition.push({ name: ILike(`%${filter.name}%`) });
     }
 
-    const where = whereCondition.length ? whereCondition : filter;
+    // Tìm theo buildingId nếu có
+    if (filter.buildingId) {
+      whereCondition.push({ building: { id: filter.buildingId } });
+    }
 
+    // Nếu không có điều kiện nào, lấy toàn bộ
+    const where = whereCondition.length ? whereCondition : {};
+
+    // Xử lý sort
     let order = {};
     if (sort) {
       const [sortBy, sortOrder] = Object.entries(sort)[0];
       order = { [sortBy]: sortOrder === 1 ? 'ASC' : 'DESC' };
     }
 
-    const totalItems = await this.floorRepository.count({
-      where,
-    });
-
+    // Tổng số bản ghi
+    const totalItems = await this.floorRepository.count({ where });
     const totalPages = Math.ceil(totalItems / defaultLimit);
 
+    // Lấy dữ liệu
     const result = await this.floorRepository.find({
       where,
       skip: offset,
@@ -81,7 +89,6 @@ export class FloorService {
       order,
     });
 
-    // Trả về kết quả và thông tin phân trang
     return {
       meta: {
         current: currentPage,

@@ -30,6 +30,22 @@ export class CampusController {
     return this.campusService.findAll(+currentPage, +limit, qs);
   }
 
+  @Get('summary')
+  summary(@Query('campusId') campusId?: number) {
+    return this.campusService.getCampusSummary(
+      campusId ? +campusId : undefined,
+    );
+  }
+
+  @Get('campus-detail')
+  campusDetail(@Query('campusId') campusId: number) {
+    return this.campusService.getDetailCampusById(campusId);
+  }
+
+  @Get('total-all-campus')
+  totalAllCampus() {
+    return this.campusService.getCampusTotalSummary();
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.campusService.findOne(+id);
