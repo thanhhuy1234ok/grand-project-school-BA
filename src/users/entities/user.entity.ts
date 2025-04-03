@@ -2,6 +2,7 @@ import { Attendance } from 'src/attendance/entities/attendance.entity';
 import { Class } from 'src/classes/entities/class.entity';
 import { Cohort } from 'src/cohort/entities/cohort.entity';
 import { Major } from 'src/major/entities/major.entity';
+import { FacilityAssignment } from 'src/modules_v2/csvc/facility-assignment/entities/facility-assignment.entity';
 import { Role } from 'src/roles/entities/role.entity';
 import { Schedule } from 'src/schedule/entities/schedule.entity';
 import { Score } from 'src/score/entities/score.entity';
@@ -82,6 +83,9 @@ export class User {
 
   @OneToMany(() => UpdateInfoUser, (updateRequest) => updateRequest.user)
   updateRequests: UpdateInfoUser[];
+
+  @OneToMany(() => FacilityAssignment, (assignment) => assignment.assignedBy)
+  assignments: FacilityAssignment[];
 
   /** Column Token */
   @Column({ nullable: true })
