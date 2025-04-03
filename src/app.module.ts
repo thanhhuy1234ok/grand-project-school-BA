@@ -28,6 +28,9 @@ import { FileModule } from './file/file.module';
 import { FacilityCategoryModule } from './modules_v2/csvc/facility-category/facility-category.module';
 import { FacilityStatusModule } from './modules_v2/csvc/facility-status/facility-status.module';
 import { SupplierModule } from './modules_v2/csvc/supplier/supplier.module';
+import { FacilityModule } from './modules_v2/csvc/facility/facility.module';
+import { FacilityAssignmentModule } from './modules_v2/csvc/facility-assignment/facility-assignment.module';
+import { MaintenanceHistoryModule } from './modules_v2/csvc/maintenance-history/maintenance-history.module';
 
 @Module({
   imports: [
@@ -85,6 +88,9 @@ import { SupplierModule } from './modules_v2/csvc/supplier/supplier.module';
     FacilityCategoryModule,
     FacilityStatusModule,
     SupplierModule,
+    FacilityModule,
+    FacilityAssignmentModule,
+    MaintenanceHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

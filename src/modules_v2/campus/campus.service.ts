@@ -111,17 +111,29 @@ export class CampusService {
     return query.getRawMany();
   }
 
+  // async getCampusTotalSummary(): Promise<any> {
+  //   return this.campusRepository
+  //     .createQueryBuilder('campus')
+  //     .leftJoin('campus.buildings', 'building')
+  //     .leftJoin('building.floors', 'floor')
+  //     .leftJoin('floor.rooms', 'room')
+  //     .select([
+  //       'COUNT(DISTINCT campus.id) AS "totalCampuses"',
+  //       'COUNT(DISTINCT building.id) AS "totalBuildings"',
+  //       'COUNT(DISTINCT room.id) AS "totalRooms"',
+  //     ])
+  //     .getRawOne();
+  // }
+
   async getCampusTotalSummary(): Promise<any> {
     return this.campusRepository
-      .createQueryBuilder('campus')
-      .leftJoin('campus.buildings', 'building')
-      .leftJoin('building.floors', 'floor')
-      .leftJoin('floor.rooms', 'room')
+      .createQueryBuilder()
       .select([
-        'COUNT(DISTINCT campus.id) AS "totalCampuses"',
-        'COUNT(DISTINCT building.id) AS "totalBuildings"',
-        'COUNT(DISTINCT room.id) AS "totalRooms"',
+        `(SELECT COUNT(*) FROM campus) AS "totalCampuses"`,
+        `(SELECT COUNT(*) FROM building) AS "totalBuildings"`,
+        `(SELECT COUNT(*) FROM room) AS "totalRooms"`,
       ])
+      .from('campus', 'campus') // tránh lỗi main alias
       .getRawOne();
   }
 

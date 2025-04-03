@@ -16,8 +16,9 @@ export class Building {
   @ManyToOne(() => Campus, (campus) => campus.buildings, {
     nullable: false,
     onDelete: 'CASCADE',
+    eager:true
   })
-  @JoinColumn({ name: 'campusID' })
+  @JoinColumn({ name: 'campusID'})
   campus: Campus;
 
   @OneToMany(() => Floor, (floor) => floor.building)

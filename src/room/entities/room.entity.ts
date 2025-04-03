@@ -1,4 +1,5 @@
 import { Building } from 'src/modules_v2/building/entities/building.entity';
+import { FacilityAssignment } from 'src/modules_v2/csvc/facility-assignment/entities/facility-assignment.entity';
 import { Floor } from 'src/modules_v2/floor/entities/floor.entity';
 import { Schedule } from 'src/schedule/entities/schedule.entity';
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
@@ -9,11 +10,12 @@ export class Room {
   id: number;
 
   @Column()
-  name: string; 
+  name: string;
 
   @ManyToOne(() => Building, (building) => building.rooms, {
     nullable: false,
     onDelete: 'CASCADE',
+    eager:true
   })
   @JoinColumn({ name: 'buildingID' })
   building: Building; // Mỗi phòng thuộc một tòa nhà
@@ -23,7 +25,7 @@ export class Room {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'floorID' })
-  floor: Floor | null; 
+  floor: Floor | null;
 
   @Column('int')
   capacity: number;
@@ -33,10 +35,13 @@ export class Room {
     enum: ['Available', 'Occupied', 'Under Maintenance'],
     default: 'Available',
   })
-  status: 'Available' | 'Occupied' | 'Under Maintenance'; 
+  status: 'Available' | 'Occupied' | 'Under Maintenance';
 
   @OneToMany(() => Schedule, (schedule) => schedule.room)
   schedules: Schedule[];
+
+  @OneToMany(() => FacilityAssignment, (assignment) => assignment.room)
+  assignments: FacilityAssignment[];
 
   @CreateDateColumn()
   createdAt: Date;
