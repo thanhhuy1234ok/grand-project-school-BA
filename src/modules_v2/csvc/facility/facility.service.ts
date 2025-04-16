@@ -52,6 +52,49 @@ export class FacilityService {
     return this.facilityRepo.save(facility);
   }
 
+  async createMany(createFacilityDtos: CreateFacilityDto[]) {
+    const results = [];
+
+    for (const dto of createFacilityDtos) {
+      const checkIDCategory = await this.facilityCategoryRepository.findOne({
+        where: { id: dto.category_id },
+      });
+      const checkIDStatus = await this.facilityStatusRepository.findOne({
+        where: { id: dto.status_id },
+      });
+      const checkIDSupplier = await this.supplierRepository.findOne({
+        where: { id: dto.supplier_id },
+      });
+
+      if (!checkIDCategory || !checkIDStatus || !checkIDSupplier) {
+        results.push({
+          success: false,
+          message: 'Invalid IDs',
+          data: {
+            name: dto.name,
+            category_id: dto.category_id,
+            status_id: dto.status_id,
+            supplier_id: dto.supplier_id,
+          },
+        });
+        continue;
+      }
+
+      const facility = this.facilityRepo.create({
+        ...dto,
+        category: checkIDCategory,
+        status: checkIDStatus,
+        supplier: checkIDSupplier,
+        remainingQuantity: dto.quantity,
+      });
+
+      const saved = await this.facilityRepo.save(facility);
+      results.push({ success: true, data: saved });
+    }
+
+    return results;
+  }
+
   async findAll(currentPage: number, limit: number, qs: string) {
     const { filter, sort } = aqp(qs);
     delete filter.current;

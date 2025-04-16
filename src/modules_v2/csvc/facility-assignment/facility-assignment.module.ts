@@ -13,5 +13,6 @@ import { Room } from 'src/room/entities/room.entity';
   imports: [
     TypeOrmModule.forFeature([FacilityAssignment, Facility, User, Room]),
   ],
+  exports: [FacilityAssignmentService],
 })
 export class FacilityAssignmentModule {}

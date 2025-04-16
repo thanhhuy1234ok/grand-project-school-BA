@@ -10,6 +10,7 @@ export class FacilityAssignment {
 
   @ManyToOne(() => Facility, (facility) => facility.assignments, {
     nullable: false,
+    eager: true,
   })
   facility: Facility;
 

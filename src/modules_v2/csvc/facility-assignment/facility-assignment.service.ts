@@ -52,30 +52,29 @@ export class FacilityAssignmentService {
     const isBan = facilityName.includes('bàn');
     const isGhe = facilityName.includes('ghế');
 
-   let totalAssigned = 0;
+    let totalAssigned = 0;
 
-   if (isBan || isGhe) {
-     const keyword = isBan ? '%bàn%' : '%ghế%';
+    if (isBan || isGhe) {
+      const keyword = isBan ? '%bàn%' : '%ghế%';
 
-     const result = await this.assignmentRepository
-       .createQueryBuilder('assignment')
-       .leftJoin('assignment.facility', 'facility')
-       .where('assignment.room = :roomId', { roomId: dto.room_id })
-       .andWhere('facility.name ILIKE :keyword', { keyword })
-       .select('SUM(assignment.quantity)', 'total')
-       .getRawOne();
+      const result = await this.assignmentRepository
+        .createQueryBuilder('assignment')
+        .leftJoin('assignment.facility', 'facility')
+        .where('assignment.room = :roomId', { roomId: dto.room_id })
+        .andWhere('facility.name ILIKE :keyword', { keyword })
+        .select('SUM(assignment.quantity)', 'total')
+        .getRawOne();
 
-     totalAssigned = Number(result?.total) || 0;
+      totalAssigned = Number(result?.total) || 0;
 
-     const willBe = totalAssigned + Number(dto.quantity);
+      const willBe = totalAssigned + Number(dto.quantity);
 
-     if (willBe > Number(room.capacity)) {
-       throw new BadRequestException(
-         `Không thể phân bổ ${dto.quantity} ${facility.name} vì sẽ vượt quá sức chứa ${room.capacity} của phòng.`,
-       );
-     }
-   }
-
+      if (willBe > Number(room.capacity)) {
+        throw new BadRequestException(
+          `Không thể phân bổ ${dto.quantity} ${facility.name} vì sẽ vượt quá sức chứa ${room.capacity} của phòng.`,
+        );
+      }
+    }
 
     // ✅ Tạo bản ghi phân bổ
     const assignment = this.assignmentRepository.create({
@@ -94,6 +93,88 @@ export class FacilityAssignmentService {
     );
 
     return this.assignmentRepository.save(assignment);
+  }
+
+  async createMany(dtos: CreateFacilityAssignmentDto[], user: IUser) {
+    const results = [];
+
+    const checkUser = await this.usersRepository.findOne({
+      where: { id: user.id },
+    });
+    if (!checkUser) throw new NotFoundException('User not found');
+
+    for (const dto of dtos) {
+      try {
+        const facility = await this.facilityRepository.findOne({
+          where: { id: dto.facility_id },
+          relations: ['category'],
+        });
+        if (!facility) throw new NotFoundException('Facility not found');
+
+        if (dto.quantity <= 0)
+          throw new BadRequestException('Số lượng phân bổ không hợp lệ');
+        if (facility.remainingQuantity < dto.quantity)
+          throw new BadRequestException(
+            `Không đủ thiết bị tồn kho để phân bổ cho ${facility.name}`,
+          );
+
+        const room = await this.roomRepository.findOne({
+          where: { id: dto.room_id },
+        });
+        if (!room) throw new NotFoundException('Room not found');
+
+        const facilityName = facility.name.toLowerCase();
+        const isBan = facilityName.includes('bàn');
+        const isGhe = facilityName.includes('ghế');
+        let totalAssigned = 0;
+
+        if (isBan || isGhe) {
+          const keyword = isBan ? '%bàn%' : '%ghế%';
+
+          const result = await this.assignmentRepository
+            .createQueryBuilder('assignment')
+            .leftJoin('assignment.facility', 'facility')
+            .where('assignment.room = :roomId', { roomId: dto.room_id })
+            .andWhere('facility.name ILIKE :keyword', { keyword })
+            .select('SUM(assignment.quantity)', 'total')
+            .getRawOne();
+
+          totalAssigned = Number(result?.total) || 0;
+
+          const willBe = totalAssigned + Number(dto.quantity);
+          if (willBe > Number(room.capacity)) {
+            throw new BadRequestException(
+              `Không thể phân bổ ${dto.quantity} ${facility.name} vì sẽ vượt quá sức chứa ${room.capacity} của phòng.`,
+            );
+          }
+        }
+
+        const assignment = this.assignmentRepository.create({
+          facility,
+          room,
+          quantity: dto.quantity,
+          assignedBy: checkUser,
+          assignedAt: new Date(),
+        });
+
+        await this.facilityRepository.decrement(
+          { id: facility.id },
+          'remainingQuantity',
+          dto.quantity,
+        );
+
+        const saved = await this.assignmentRepository.save(assignment);
+        results.push({ success: true, data: saved });
+      } catch (error) {
+        results.push({
+          success: false,
+          message: error.message,
+          dto,
+        });
+      }
+    }
+
+    return results;
   }
 
   async findAll(currentPage: number, limit: number, qs: string) {
@@ -128,7 +209,13 @@ export class FacilityAssignmentService {
       skip: offset,
       take: defaultLimit,
       order,
-      relations: ['room', 'assignedBy', 'facility','room.building','room.building.campus'],
+      relations: [
+        'room',
+        'assignedBy',
+        'facility',
+        'room.building',
+        'room.building.campus',
+      ],
     });
 
     // Trả về kết quả và thông tin phân trang
