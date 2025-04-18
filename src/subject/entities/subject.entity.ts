@@ -19,6 +19,9 @@ export class Subject {
   @Column()
   type: string;
 
+  @Column({ nullable: true })
+  price: number; // Giá môn học
+
   @OneToMany(() => Schedule, (schedule) => schedule.subject)
   schedules: Schedule[];
 

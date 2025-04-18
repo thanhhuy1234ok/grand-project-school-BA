@@ -31,6 +31,13 @@ import { SupplierModule } from './modules_v2/csvc/supplier/supplier.module';
 import { FacilityModule } from './modules_v2/csvc/facility/facility.module';
 import { FacilityAssignmentModule } from './modules_v2/csvc/facility-assignment/facility-assignment.module';
 import { MaintenanceHistoryModule } from './modules_v2/csvc/maintenance-history/maintenance-history.module';
+import { RegistrationModule } from './modules_v2/stundent-v2/registration/registration.module';
+import { PaymentModule } from './modules_v2/stundent-v2/payment/payment.module';
+import { ClassScheduleModule } from './modules_v2/stundent-v2/class-schedule/class-schedule.module';
+import { LessonModule } from './modules_v2/stundent-v2/lesson/lesson.module';
+import { AttendanceV1Module } from './modules_v2/stundent-v2/attendance-v1/attendance-v1.module';
+import { EnrollmentModule } from './modules_v2/stundent-v2/enrollment/enrollment.module';
+import { VnPayModule } from './modules_v2/modules-payment/vn-pay/vn-pay.module';
 
 @Module({
   imports: [
@@ -91,6 +98,13 @@ import { MaintenanceHistoryModule } from './modules_v2/csvc/maintenance-history/
     FacilityModule,
     FacilityAssignmentModule,
     MaintenanceHistoryModule,
+    RegistrationModule,
+    PaymentModule,
+    ClassScheduleModule,
+    LessonModule,
+    AttendanceV1Module,
+    EnrollmentModule,
+    VnPayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

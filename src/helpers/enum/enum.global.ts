@@ -10,3 +10,10 @@ export enum AssignmentStatus {
   COMPLETED = 'đã hoàn tất',
   PENDING = 'chờ xử lý',
 }
+
+export enum EnrollmentStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  CANCELED = 'canceled',
+  EXPIRED = 'expired',
+}

@@ -14,4 +14,8 @@ export class CreateSubjectDto {
 
   @IsString()
   type: string;
+
+  @IsInt()
+  @Min(0, { message: 'Giá môn học không được âm' })
+  price: number;
 }
